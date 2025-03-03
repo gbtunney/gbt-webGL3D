@@ -1,6 +1,6 @@
 import * as THREE from 'three'
+import {fragment, vertex} from './webgl.js'
 
-import {fragment,vertex}from './webgl.js'
 export class Sketch {
     constructor(options) {
         this.scene = new THREE.Scene();
@@ -45,9 +45,10 @@ export class Sketch {
 
         this.isPlaying = true;
         this.addObjects();
-        this.resize();
-        this.render();
         this.setupResize();
+        this.render();
+        this.resize();
+
 
         if (this.mode === 'mouse') {
             this.mouseEvents();
@@ -110,7 +111,7 @@ export class Sketch {
         this.renderer.setSize(this.width, this.height);
         this.camera.aspect = this.width / this.height;
         this.camera.updateProjectionMatrix();
-
+        console.log("dimensions", {...this.width, ...this.height})
         let a1, a2;
         if (this.height / this.width > 1) {
             a1 = (this.width / this.height) * 1;
@@ -211,6 +212,7 @@ export class Sketch {
 
         this.resize();
     }
+
     updateDataTexture(time) {
         time /= 1000; // Convert time to seconds
         if (this.mode === 'mouse') {
