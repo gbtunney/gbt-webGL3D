@@ -1,28 +1,32 @@
-import {useState} from 'react'
+import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-import Kal from './Kal.tsx'
+import { KalCanvas } from './components/KalCanvas.tsx'
 
 function App() {
     const [count, setCount] = useState(0)
-
+    // const dimensions = imageSize(uvImg)
     return (
         <>
             <div>
-
                 <a href="https://vite.dev" target="_blank">
-                    <img src={viteLogo} className="logo" alt="Vite logo"/>
+                    <img src={viteLogo} className="logo" alt="Vite logo" />
                 </a>
                 <a href="https://react.dev" target="_blank">
-                    <img src={reactLogo} className="logo react" alt="React logo"/>
+                    <img
+                        src={reactLogo}
+                        className="logo react"
+                        alt="React logo"
+                    />
                 </a>
             </div>
+            <KalCanvas imgURL="uv-checker.png" />
             <h1>Vite + React</h1>
-
-            <Kal></Kal>
+            <h1>Vite + React</h1>
+            {/*   <Kal imgURL='uv-checker.png'></Kal>
             <Kal imgURL={'vite.svg'}></Kal>
-            <Kal imgURL={reactLogo}></Kal>
+            <Kal imgURL={reasctLogo}></Kal>*/}
             <div className="card">
                 <button onClick={() => setCount((count) => count + 1)}>
                     count is {count}
