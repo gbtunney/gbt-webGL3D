@@ -3,8 +3,12 @@ import {
     Mesh,
     MeshBasicMaterial,
     ShaderMaterial,
+    ShaderMaterialParameters,
     Texture,
+    TextureLoader,
+    Vector2,
     Vector3,
+    Vector4,
 } from 'three'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 //import {getShaderMaterial} from "./../script/shader-webgl.js";
@@ -19,66 +23,129 @@ import {
     extend,
     ThreeToJSXElements,
     useFrame,
+    useLoader,
     useThree,
 } from '@react-three/fiber'
 import { GUI } from 'dat.gui'
-import { addGUIProps } from '../script/helpers'
+import { addGUIPropsFolder } from './../script/helpers.js'
+import {
+    fragment,
+    vertex,
+    Uniforms,
+    SHADER_UNIFORMS_DEFAULT,
+} from '../script/shader-webgl.js'
 
 declare module '@react-three/fiber' {
     interface ThreeElements extends ThreeToJSXElements<typeof THREE> {}
 }
 extend(THREE as any)
 
-const ROT_GUI_API = {
-    offsetX: 0,
-    offsetY: 0,
-    repeatX: 1,
-    repeatY: 1,
-    rotation: 0, /// Math.PI / 4, // positive is counterclockwise
-    centerX: 0.5,
-    centerY: 0.5,
+export const getShaderMaterial = (
+    url: string,
+    scaleFactor: number = 1,
+    imageAspect: number = 1,
+    segments: number = 6,
+): ShaderMaterialParameters => {
+    const _texture = useTexture(url)
+    return {
+        /*extensions: {
+             derivatives: "#extension GL_OES_standard_derivatives : enable"
+         }*/
+        side: THREE.DoubleSide,
+        uniforms: {
+            resolution: {
+                value: new THREE.Vector4(30, 30, 1, 1),
+            },
+            uTexture: {
+                value: _texture,
+            },
+            uOpacity: {
+                value: 1,
+            },
+            uOffset: {
+                value: new THREE.Vector2(0, 0),
+            },
+            uRotation: {
+                value: 0,
+            },
+            uRotationAmount: {
+                value: 0.2,
+            },
+            uOffsetAmount: {
+                value: 0.2,
+            },
+            segments: {
+                value: segments,
+            },
+            uScaleFactor: {
+                value: scaleFactor,
+            },
+            uImageAspect: {
+                value: imageAspect,
+            },
+        },
+        vertexShader: vertex,
+        fragmentShader: fragment,
+        transparent: true,
+    }
 }
-const TextureComponent = ({ texturePath }: { texturePath: string }) => {
-    const [texture, setTexture] = useState<Texture | undefined>(undefined)
+const SHADER_API: Uniforms = SHADER_UNIFORMS_DEFAULT
 
+const TextureComponent = ({ texturePath }: { texturePath: string }) => {
     /** LOAD TEXTURE URRL */
-    const textureProps = useTexture(
-        {
-            map: texturePath,
-        },
-        ({ map }) => {
-            const __texture: Texture = map
-            if (__texture !== undefined && texture === undefined) {
-                setTexture(() => __texture)
-                console.log('TEXTURE LOADED   ::: SETTING NEW !', texture)
-            }
-        },
-    )
     /** INIT THE GUI CONTRTOLLER for the TEXTTURRE ONLY. */
-    const materialRef = useRef<MeshBasicMaterial | null>(null)
+    const materialRef = useRef<ShaderMaterial | null>(null)
+    const _shaderProps: ShaderMaterialParameters = getShaderMaterial(
+        texturePath,
+        1,
+        1,
+        3,
+    )
+    const [uniformObj] = useState<ShaderMaterialParameters['uniforms']>(
+        _shaderProps.uniforms === undefined ? {} : _shaderProps.uniforms,
+    )
+
     useEffect(() => {
         const GUI_CONTROLLER = new GUI()
-        if (textureProps?.map !== undefined && materialRef.current !== null) {
-            GUI_CONTROLLER.add(ROT_GUI_API, 'offsetX', 0.0, 1.0)
+        if (materialRef.current !== null) {
+            const imgController = GUI_CONTROLLER.addFolder('Image Material')
+            imgController
+                .add<Uniforms['offset']>(SHADER_API.offset, 'x', 0.0, 1.0, 0.1)
                 .name('offset.x')
                 .onChange(updateUvTransform)
-            GUI_CONTROLLER.add(ROT_GUI_API, 'offsetY', 0.0, 1.0)
+            imgController
+                .add<Uniforms['offset']>(SHADER_API.offset, 'y', 0.0, 1.0, 0.1)
                 .name('offset.y')
                 .onChange(updateUvTransform)
-            GUI_CONTROLLER.add(ROT_GUI_API, 'repeatX', 0.25, 2.0)
-                .name('repeat.x')
+
+            imgController
+                .add(SHADER_API, 'segments', 1, 12, 1)
+                .name('segments')
                 .onChange(updateUvTransform)
-            GUI_CONTROLLER.add(ROT_GUI_API, 'repeatY', 0.25, 2.0)
-                .name('repeat.y')
-                .onChange(updateUvTransform)
-            GUI_CONTROLLER.add(ROT_GUI_API, 'rotation', -2.0, 2.0)
+
+            imgController
+                .add(SHADER_API, 'rotation', 0, 1, 0.05)
                 .name('rotation')
                 .onChange(updateUvTransform)
-            GUI_CONTROLLER.add(ROT_GUI_API, 'centerX', 0.0, 1.0)
-                .name('center.x')
+
+            imgController
+                .add(SHADER_API, 'scaleFactor', 0, 2, 0.05)
+                .name('scaleFactor')
                 .onChange(updateUvTransform)
-            GUI_CONTROLLER.add(ROT_GUI_API, 'centerY', 0.0, 1.0)
-                .name('center.y')
+
+            const adjController: GUI = GUI_CONTROLLER.addFolder('adjustments')
+            adjController
+                .add<
+                    Uniforms['adjustments']
+                >(SHADER_API.adjustments, 'rotation', 0.0, 1.0, 0.1)
+                .name('adjust rotation')
+                .onChange(updateUvTransform)
+
+            adjController
+                .add<
+                    Uniforms['adjustments']
+                >(SHADER_API.adjustments, 'offset', 0.0, 1.0, 0.1)
+                .name('offset adjustment')
                 .onChange(updateUvTransform)
         }
         return () => {
@@ -88,43 +155,27 @@ const TextureComponent = ({ texturePath }: { texturePath: string }) => {
 
     /** UPDATE THE TEXTURE PROPS */
     const updateUvTransform = () => {
-        if (textureProps?.map !== undefined && materialRef.current !== null) {
-            const textureToUpdate: Texture = textureProps.map
-
-            /** INIT TEXTURE */
-            textureToUpdate.wrapS = textureToUpdate.wrapT = THREE.RepeatWrapping
-            // textureToUpdate.anisotropy = renderer.capabilities.getMaxAnisotropy();
-            textureToUpdate.colorSpace = THREE.SRGBColorSpace
-
-            if (textureToUpdate.matrixAutoUpdate === true) {
-                textureToUpdate.offset.set(
-                    ROT_GUI_API.offsetX,
-                    ROT_GUI_API.offsetY,
-                )
-                textureToUpdate.repeat.set(
-                    ROT_GUI_API.repeatX,
-                    ROT_GUI_API.repeatX,
-                )
-                textureToUpdate.center.set(
-                    ROT_GUI_API.centerX,
-                    ROT_GUI_API.centerY,
-                )
-                textureToUpdate.rotation = ROT_GUI_API.rotation // rotation is around center
-            } else {
-                // setting the matrix uv transform directly
-                //texture.matrix.setUvTransform( API.offsetX, API.offsetY, API.repeatX, API.repeatY, API.rotation, API.centerX, API.centerY );
-                // another way...
-                textureToUpdate.matrix
-                    .identity()
-                    .translate(-ROT_GUI_API.centerX, -ROT_GUI_API.centerY)
-                    .rotate(ROT_GUI_API.rotation) // I don't understand how rotation can precede scale, but it seems to be required...
-                    .scale(ROT_GUI_API.repeatX, ROT_GUI_API.repeatY)
-                    .translate(ROT_GUI_API.centerX, ROT_GUI_API.centerY)
-                    .translate(ROT_GUI_API.offsetX, ROT_GUI_API.offsetY)
-            }
+        if (materialRef.current !== null && uniformObj !== undefined) {
+            uniformObj.segments.value = SHADER_API.segments
+            uniformObj.uOffset.value = new Vector2(
+                SHADER_API.offset.x,
+                SHADER_API.offset.y,
+            )
+            uniformObj.uRotation.value = SHADER_API.rotation
+            uniformObj.uScaleFactor.value = SHADER_API.scaleFactor
+            uniformObj.uOffsetAmount.value = SHADER_API.adjustments.offset
+            uniformObj.uRotationAmount.value = SHADER_API.adjustments.rotation
         }
     }
-    return <meshBasicMaterial ref={materialRef} {...textureProps} />
+    return (
+        <shaderMaterial
+            vertexShader={vertex}
+            uniforms={uniformObj}
+            fragmentShader={fragment}
+            transparent={true}
+            ref={materialRef}
+        />
+    )
 }
 
 export type GeneratePlaneMeshProps = {
@@ -147,19 +198,6 @@ export const GeneratePlaneMesh = ({
     const ref = useRef<Mesh | null>(null)
     // Hold state for hovered and clicked events
     const { controls, camera, mouse, viewport, size, gl } = useThree()
-    const vec = new Vector3()
-    //BUILD
-    // const plane_geometry =  new THREE.PlaneGeometry(1, 1, 1, 1);
-    //   const  custom_material:ShaderMaterial =  getShaderMaterial(imgURL,scale,segments,aspect_ratio)
-    //console.log("MATERIAL!",custom_material
-    // Subscribe this component to the render-loop, rotate the mesh every frame
-    /* useFrame((state, delta) => {
-        // ref.current.rotation.x += delta
-        // ref.current.offset.x +=deltas
-        /!*  console.log(
-              "mousing", mouse, viewport
-          )*!/
-    })*/
     const reportProps = () => {
         return {
             size,
@@ -172,7 +210,8 @@ export const GeneratePlaneMesh = ({
     }
     useEffect(() => {
         /** INIT THE GUI FOR MESH PROPS */
-        const GUI_CONTROLLER = new GUI({ name: 'MESH' })
+        const GUI_CONTROLLER = new GUI()
+
         if (ref.current !== null && ref.current.rotation) {
             const GUI_CONFIG = [
                 { propName: 'x', min: 0, max: 500 },
@@ -180,7 +219,12 @@ export const GeneratePlaneMesh = ({
                 { propName: 'z', min: 0, max: 500 },
             ]
             const _geom = ref.current?.geometry
-            addGUIProps(GUI_CONTROLLER, ref.current.rotation, GUI_CONFIG)
+            addGUIPropsFolder(
+                GUI_CONTROLLER,
+                'MESH',
+                ref.current.rotation,
+                GUI_CONFIG,
+            )
         }
         return () => {
             GUI_CONTROLLER.destroy()
