@@ -1,30 +1,15 @@
-import { GUI, GUIController } from 'dat.gui'
-export type GuiEntry = {
-    target: any
-    propName: string
-    min?: number
-    max?: number
-    step?: number
-}
+import { Vector4 } from 'three'
 
-export const addGUIPropsFolder = (
-    _gui: GUI,
-    folder_name: string | undefined,
-    target: any,
-    value: Omit<GuiEntry, 'target'>[],
-    callbackFunc: (value?: any) => void = () => {},
-): GUI => {
-    const folder = _gui.addFolder(
-        folder_name === undefined ? 'default' : folder_name,
-    )
-
-    const result: GUIController[] = value.map<GUIController>(
-        (item: Omit<GuiEntry, 'target'>) => {
-            return folder
-                .add(target, item.propName, item.min, item.max, item.step)
-                .onChange(callbackFunc)
-        },
-    )
-    // return result
-    return folder
+export type Dimensions = {
+    width: number
+    height: number
 }
+export type Point = { x: number; y: number }
+export const getResolution = (dimensions: Dimensions): Vector4 => {
+    const { width: _width, height: _height } = dimensions
+    const aA = _height / _width > 1 ? _width / _height : 1
+    const aB = _height / _width > 1 ? 1 : _height / _width
+    return new Vector4(_width, _height, aA, aB)
+}
+export const distanceBetweenPoints = (a: Point, b: Point) =>
+    Math.hypot(b.x - a.x, b.y - a.y)

@@ -6,7 +6,6 @@ import { KalCanvas } from './components/KalCanvas.tsx'
 
 function App() {
     const [count, setCount] = useState(0)
-    // const dimensions = imageSize(uvImg)
     return (
         <>
             <div>
@@ -21,12 +20,16 @@ function App() {
                     />
                 </a>
             </div>
-            <KalCanvas imgURL="uv-checker.png" />
-            <h1>Vite + React</h1>
-            <h1>Vite + React</h1>
-            {/*   <Kal imgURL='uv-checker.png'></Kal>
-            <Kal imgURL={'vite.svg'}></Kal>
-            <Kal imgURL={reasctLogo}></Kal>*/}
+
+            <div style={{ maxWidth: '60%', width: 'auto', margin: '0 auto' }}>
+                <KalCanvas
+                    orbit={true}
+                    controls={true}
+                    aspect_ratio={1}
+                    imgURL="uv-checker.png"
+                />
+            </div>
+
             <div className="card">
                 <button onClick={() => setCount((count) => count + 1)}>
                     count is {count}

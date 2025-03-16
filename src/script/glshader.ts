@@ -1,7 +1,5 @@
-import * as THREE from 'three'
-import { Vector2, Vector3, Vector4 } from 'three'
-import type { Material, ShaderMaterial } from 'three'
-import { useLoader } from '@react-three/fiber'
+import { Texture, Vector2, Vector4 } from 'three'
+import { Dimensions, getResolution, Point } from './helpers.js'
 
 export const vertex = `
 varying vec2 vUv;
@@ -53,17 +51,7 @@ color.a *= uOpacity;
 gl_FragColor = color;
 }
 `
-export type Dimensions = {
-    width: number
-    height: number
-}
-export type Point = { x: number; y: number }
-export const getResolution = (dimensions: Dimensions): Vector4 => {
-    const { width: _width, height: _height } = dimensions
-    const aA = _height / _width > 1 ? _width / _height : 1
-    const aB = _height / _width > 1 ? 1 : _height / _width
-    return new Vector4(_width, _height, aA, aB)
-}
+
 export type NestedValue<Type = number> = { value: Type }
 
 export type Uniforms = {
@@ -72,6 +60,7 @@ export type Uniforms = {
     rotation: number
     scaleFactor: number
     segments: number
+    texture: Texture
     image: {
         dimensions: Dimensions
     }
@@ -82,9 +71,10 @@ export type Uniforms = {
     opacity: number
 }
 
-export type ShaderUniforms = {
+type ShaderUniforms = {
     resolution: NestedValue<Vector4>
     uOffset: NestedValue<Vector2>
+    uTexture: NestedValue<Texture>
     uRotation: NestedValue
     uScaleFactor: NestedValue
     segments: NestedValue
@@ -93,37 +83,10 @@ export type ShaderUniforms = {
     uImageAspect: NestedValue
     uOpacity: NestedValue
 }
-
-export const SHADER_UNIFORMS_DEFAULT: Uniforms = {
-    segments: 6,
-    rotation: 0,
-    opacity: 1,
-    offset: {
-        x: 0,
-        y: 0,
-    },
-    scaleFactor: 1,
-
-    dimensions: {
-        width: 1020,
-        height: 1020,
-    },
-    adjustments: {
-        rotation: 0.2,
-
-        offset: 0.2,
-    },
-    image: {
-        dimensions: { width: 1024, height: 1024 },
-    },
-}
-
-export const getOutUniforms = (
-    uniforms: Uniforms,
-    _default: Uniforms = SHADER_UNIFORMS_DEFAULT,
-): ShaderUniforms => {
+export const getOutUniforms = (uniforms: Uniforms): ShaderUniforms => {
     const {
         opacity,
+        texture,
         dimensions,
         offset,
         rotation,
@@ -132,12 +95,12 @@ export const getOutUniforms = (
         adjustments,
         image: { dimensions: imageDimensions },
     } = uniforms
-    console.log('DIMENSION', dimensions)
     const resolution = { value: getResolution(dimensions) }
     const uOffset = { value: new Vector2(offset.x, offset.y) }
     const uRotation = { value: rotation }
     const uScaleFactor = { value: scaleFactor }
     const segments = { value: uSegments }
+    const uTexture = { value: texture }
 
     const uRotationAmount = { value: adjustments.rotation }
     const uOffsetAmount = { value: adjustments.offset }
@@ -149,6 +112,7 @@ export const getOutUniforms = (
     return {
         uOpacity,
         resolution,
+        uTexture,
         uOffset,
         uRotation,
         uRotationAmount,
@@ -157,37 +121,38 @@ export const getOutUniforms = (
         uOffsetAmount,
         uImageAspect,
     }
-    /*
-        {7
-            resolution: {
-                value: new THREE.Vector4(30,30,1,1),
-            },
-            uTexture: {
-                value: _texture,
-            },
-            uOpacity: {
-                value: 1,
-            },
-            uOffset: {
-                value: new THREE.Vector2(0, 0),
-            },
-            uRotation: {
-                value: 0,
-            },
-            uRotationAmount: {
-                value: 0.2,
-            },
-            uOffsetAmount: {
-                value: 0.2,
-            },
-            segments: {
-                value: segments,
-            },
-            uScaleFactor: {
-                value: scaleFactor,
-            },
-            uImageAspect: {
-                value: imageAspect,
-            },
-        },*/
 }
+
+/*
+       {7
+           resolution: {
+               value: new THREE.Vector4(30,30,1,1),
+           },
+           uTexture: {
+               value: _texture,
+           },
+           uOpacity: {
+               value: 1,
+           },
+           uOffset: {
+               value: new THREE.Vector2(0, 0),
+           },
+           uRotation: {
+               value: 0,
+           },
+           uRotationAmount: {
+               value: 0.2,
+           },
+           uOffsetAmount: {
+               value: 0.2,
+           },
+           segments: {
+               value: segments,
+           },
+           uScaleFactor: {
+               value: scaleFactor,
+           },
+           uImageAspect: {
+               value: imageAspect,
+           },
+       },*/

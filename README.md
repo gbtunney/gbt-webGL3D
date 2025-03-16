@@ -43,46 +43,37 @@ laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in repreh
 dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
 mollit anim id est laborum.
 
-## Installation
+## Helpful Links
 
-```shell
-# pnpm
-$ pnpm add @snailicide/build-config -D
+## WebGL
 
-# yarn
-$ yarn add @snailicide/build-config -D
+- [WebGL Editor](https://web.cs.upb.de/cgvb/WebGLEditor/)
+- [webgl-shader-editor]()
+- [polygonjs: node-based WebGL design tool](https://github.com/polygonjs/polygonjs?tab=readme-ov-file)
 
-# npm
-$ npm install @snailicide/build-config --development
-```
+### BabelonJS
 
-_**OR:**_
+- [Babylon.js Sandbox - View glTF, glb, obj and babylon files](https://sandbox.babylonjs.com)
+- [Babylon.js Node Material Editor (Web Based)](https://nodematerial-editor.babylonjs.com)
+- [Babylon.JS Editor (Mac OS, Windows)](https://editor.babylonjs.com/)
+- [Github: BabylonJS/Editor: Community managed visual editor for Babylon.js](https://github.com/BabylonJS/Editor)
 
-```shell
-# install in workspace
-git clone https://github.com/gbtunney/gbt-boilerplate.git ./packages/gbt-boilerplate
-rm -rf ./packages/gbt-boilerplate/.git
-pnpm install
-
-# run delete files script
-pnpm --filter=gbt-boilerplate build:ts
-pnpm --filter=gbt-boilerplate exec node ./workspace.mjs
-```
-
-## Examples
-
-```ts
-/* * HELLO WORLD * */
-
-export type HelloWorld = string | number
-
-const sampleFunc = (value: HelloWorld): HelloWorld => {
-    console.log('sampleFunc:: ', value)
-    return value
-}
-```
+- [Introduction - Drei](http://drei.docs.pmnd.rs/getting-started/introduction) : Orbit Controls, useTexture
+-
 
 ## Helpful Links
 
 - [Linting with Type Information | typescript-eslint](https://typescript-eslint.io/getting-started/typed-linting)
 - [How to quickly configure ESLint for import sorting | Medium](https://medium.com/@diballesteros/how-to-quickly-configure-eslint-for-import-sorting-3a4017bd4853)
+
+> if you remove ( or disable rotation , zoom , individually ). the canvas will NOT have any interactivity. or animation
+> running.
+>
+> the slider controls on upper right are DIFFERENT api and are called Dat.Gui . The rotation x,y,z that is enabled for
+> the MESH. this is not the same as the sliders on the right... the properties rotation, center.x, center.y will uniform
+> rotation around a PIVOT ( center,x, cetner.y ) in 2d along the mesh surface. does that make sense?? Its possible th e
+> problem with neediing to reload might have to do with the Orbiit Controls operating on the same value as the slider,
+> but it is not bound and updating the value for the Dat.Gui controller. If you orbit and rotate the mesh in the
+> viewport, the slider value is not being updated dynamically, so if u use slider reading 0 but the rotation value is
+> different --- it might result in the buggy bbehaivor if you use the slider. ( which is why the reload will fix it. (
+> maybe ) ? does that make sense?
